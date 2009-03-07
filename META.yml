@@ -1,6 +1,6 @@
 ---
 name: CGI-Mungo
-version: 1.1
+version: 1.2
 author:
   - 'MacGyveR <dumb@cpan.org>'
 abstract: Very simple CGI web framework
@@ -25,7 +25,7 @@ meta-spec:
 provides:
   CGI::Mungo:
     file: lib/CGI/Mungo.pm
-    version: 1.1
+    version: 1.2
   CGI::Mungo::Base:
     file: lib/CGI/Mungo/Base.pm
   CGI::Mungo::Log:

@@ -1,3 +1,7 @@
+Mungo 1.2 -- 07/03/2009
+
+	Functionality bugs fixed in CGI::Mungo::Response::SimpleTemplate
+
 Mungo 1.1 -- 13/02/2009
 
 	Name changed from Mungo to CGI::Mungo

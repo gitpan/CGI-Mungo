@@ -24,7 +24,7 @@ CGI::Mungo - Very simple CGI web framework
 
 =head1 DESCRIPTION
 
-All action subs are passed a <CGI::Mungo> object as the only parameter, from this you should be able to reach
+All action subs are passed a L<CGI::Mungo> object as the only parameter, from this you should be able to reach
 everything you need.
 
 =head1 METHODS
@@ -40,7 +40,7 @@ use CGI::Mungo::Response;
 use CGI::Mungo::Session;	#for session management
 use CGI::Mungo::Request;
 use Carp;
-our $VERSION = "1.1";
+our $VERSION = "1.2";
 #########################################################
 
 =pod
@@ -76,27 +76,71 @@ sub new{
 	}
 	return undef;
 }
+#########################################################
+
+=pod
+
+=item getResponse()
+
+	my $response = $m->getResponse();
+
+Returns an instance of the response plugin object, previously defined in the constructor options.
+
+=cut
+
 ###########################################################
 sub getResponse{
 	my $self = shift;
 	return $self->{'_response'};
 }
+#########################################################
+
+=pod
+
+=item getSession()
+
+=cut
+
 ###########################################################
 sub getSession{
 	my $self = shift;
 	return $self->{'_session'};
 }
+#########################################################
+
+=pod
+
+=item getRequest()
+
+=cut
+
 ###########################################################
 sub getRequest{
 	my $self = shift;
 	return $self->{'_request'};
 }
+#########################################################
+
+=pod
+
+=item setActions()
+
+=cut
+
 ###########################################################
 sub setActions{
 	my($self, $actions) = @_;
 	$self->{'_actions'} = $actions;
 	return 1;
 }
+#########################################################
+
+=pod
+
+=item getAction()
+
+=cut
+
 ###########################################################
 sub getAction{
 	my $self = shift;
@@ -109,6 +153,14 @@ sub getAction{
 	$self->log("Using action: '$action'");
 	return $action;	
 }
+#########################################################
+
+=pod
+
+=item run()
+
+=cut
+
 ###########################################################
 sub run{	#run the code for the given action
 	my $self = shift;
@@ -187,6 +239,12 @@ sub _getOption{
 =pod
 
 =back
+
+=head1 Notes
+
+To change the session prefix characters use the following code at the top of your script:
+
+	$CGI::Mungo::Session::prefix = "ABC";
 
 =head1 Author
 

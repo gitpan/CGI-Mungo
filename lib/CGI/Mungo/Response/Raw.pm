@@ -9,8 +9,8 @@ Response Raw - Raw text view plugin
 
 =head1 SYNOPSIS
 
-my $response = $mungo->getResponse();
-$response->setContent("Hello World");
+	my $response = $mungo->getResponse();
+	$response->setContent("Hello World");
 
 =head1 DESCRIPTION
 

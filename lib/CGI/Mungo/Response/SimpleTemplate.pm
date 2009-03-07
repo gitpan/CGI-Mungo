@@ -2,7 +2,7 @@
 package CGI::Mungo::Response::SimpleTemplate;
 use strict;
 use warnings;
-use base ("CGI::Mungo::Response::Base");
+use base qw(CGI::Mungo::Response::Base CGI::Mungo::Log);
 our $templateLoc = "/var/httpd/lowercall/cgi-shl/data";	#where the templates are stored
 #########################################################
 sub new{
@@ -73,7 +73,7 @@ sub _getContent{
 	if(!$self->getError()){
 		$content = $self->_parseFile($self->getTemplate());
 	}
-	else{
+	if($self->getError()){	#_parseFile may have errored
 		$self->setTemplateVar('message', $self->getError());
 		$content = $self->_parseFile("genericerror");
 	}
@@ -87,7 +87,7 @@ sub _readFile{
 		while(my $line = <CONT>){
 			$content .= $line
 		}
-		close(CONT);;
+		close(CONT);
 	}
 	else{
 		$self->setError("Cant open file: $file: $!");
@@ -97,7 +97,7 @@ sub _readFile{
 ##################################################################################
 sub _parseFile{	#this returns the contents of a page
 	my($self, $page) = @_;
-	my $contents = $self->_readFile($templateLoc . '/' . $page . ".html");
+	my $contents = $self->_readFile($self->_getTemplateLocation() . '/' . $page . ".html");
 	if($contents){
 		$contents =~ s/\[% INCLUDE ([a-z\-\/]+); %\]/$self->_parseFile('includes\/' . $1)/eg;	#include any component files first
 		$contents =~ s/<!--self-->/$ENV{'SCRIPT_NAME'}/g;
@@ -116,6 +116,27 @@ sub _getTemplateNameForAction{
 	$action =~ s/ /_/g;	#remoave spaces in action if any
 	my $name = $script . "-" . $action;
 	return $name;
+}
+#########################################################
+sub _getTemplateLocation{
+	return $templateLoc;
+}
+##########################################################
+sub _getHash{
+	my($self, $name) = @_;
+	my $mungo = $self->getMungo();
+	my $request = $mungo->getRequest();
+	my $params = $request->getParameters();
+	if($name eq "message" && $self->getError()) {	#need to print the error message here
+		return $self->getError();
+	}
+	if(defined($params->{$name})){
+		return $params->{$name};
+	}
+	else{
+		$self->log("$name is undefined");
+		return "";
+	}
 }
 #########################################################
 return 1;

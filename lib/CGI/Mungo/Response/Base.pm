@@ -9,11 +9,11 @@ Response Base - Base object for view plugins
 
 =head1 SYNOPSIS
 
-use myResponse;
-my $response = myResponse->new($mungo);
-
-package myResponse;
-use base ("CGI::Mungo::Response::Base");
+	use myResponse;
+	my $response = myResponse->new($mungo);
+	
+	package myResponse;
+	use base ("CGI::Mungo::Response::Base");
 
 =head1 DESCRIPTION
 
@@ -21,7 +21,7 @@ This object should not be used directly, a new class should be created which inh
 
 All response plugins should override at least the display() method.
 
-The module CGI::Mungo::Response will load the specified respomse plugin on script startup.
+The module L<CGI::Mungo::Response> will load the specified respomse plugin on script startup.
 
 =head1 METHODS
 
@@ -32,27 +32,15 @@ The module CGI::Mungo::Response will load the specified respomse plugin on scrip
 use strict;
 use warnings;
 use Carp;
-use base ("HTTP::Response");
+use base qw(HTTP::Response CGI::Mungo::Base);
 #########################################################
 sub new{
 	my($class, $mungo) = @_;
 	my $self = $class->SUPER::new(200, "OK");	#we dont care about the code or msg as they get removed later
 	$self->{'_mungo'} = $mungo;	#so we can access the mungo object FIXME
-	$self->{'_error'} = undef;
 	$self->{'_displayedHeader'} = 0;	#flag set on first output
 	bless $self, $class;
 	return $self;
-}
-#########################################################
-sub setError{
-	my($self, $error) = @_;
-	$self->{'_error'} = $error;
-	return 1;
-}
-#########################################################
-sub getError{
-	my $self = shift;
-	return $self->{'_error'};
 }
 #########################################################
 sub getMungo{
