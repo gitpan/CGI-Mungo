@@ -51,7 +51,9 @@ sub setVar{	#stores a variable in the session
 ##########################################################################################################################
 sub getVar{	#gets a stored variable from the session
 	my($self, $name) = @_;
-	if(defined($self->{'vars'}->{$name})){return $self->{'vars'}->{$name};}
+	if(defined($self->{'vars'}->{$name})){
+		return $self->{'vars'}->{$name};
+	}
 	else{return undef;}
 }
 ###########################################################################################################################
@@ -114,24 +116,34 @@ sub read{	#read an existing session
 	my $sessionId = $self->_getCookie("SESSION");	#get the session id from the browser
 	if(defined($sessionId)){	#got a sessionid of some sort
 		my $prefix = $self->_getPrefix();
-		if($sessionId =~ m/^$prefix[a-f0-9]+$/){	#filename valid
-			if(open(SSIDE, "</tmp/$sessionId")){	#try to open the session file
+		if($sessionId =~ m/^($prefix[a-f0-9]+)$/){	#filename valid
+			if(open(SSIDE, "</tmp/" . $1)){	#try to open the session file
 				my $contents = "";
 				while(<SSIDE>){	#read each line of the file
 					$contents .= $_;
 				}
 				close(SSIDE);
-				my $VAR1;	#the session contents var
-				{
-					eval $contents;
+				if($contents =~ m/^(\$VAR1 = \{.+\};)$/m){	#check session contents
+					my $validContents = $1; #untaint variable
+					my $VAR1;	#the session contents var
+					{
+						eval $validContents;
+					}
+					$self->{'vars'} = $VAR1;
+					$result = 1;
+					$self->setId($sessionId);	#remember the session id
 				}
-				$self->{'vars'} = $VAR1;
-				$result = 1;
-				$self->setId($sessionId);	#remember the session id
+				else{
+					$self->setError("Session contents invalid");
+				}
 			}
-			else{$self->setError("Cant open session file: $!");}
+			else{
+				$self->setError("Cant open session file: $!");
+			}
 		}
-		else{$self->setError("Session ID invalid: $sessionId");}
+		else{
+			$self->setError("Session ID invalid: $sessionId");
+		}
 	}
 	return $result;
 }
@@ -195,7 +207,9 @@ sub _write{	#writes a server-side cookie for the session
 			$Data::Dumper::Toaster = 'toast';
 			$Data::Dumper::Indent = 0;	#turn off formatting
 			my $dump = Dumper $self->{'vars'};
-			print SSIDE $dump;
+			if($dump){	#if we have any data
+				print SSIDE $dump;
+			}
 			close(SSIDE);
 		}
 		else{$self->setError("Cant write session: $!");}
@@ -221,7 +235,7 @@ sub _getCookie{	#returns the value of a cookie
 ##########################################################################################################################
 sub _storeVar{	#stores a variable in the session
 	my($self, $name, $value) = @_;
-	if(!$value){	#remove the var
+	if(!defined($value)){	#remove the var
 		if($self->{'vars'}){	
 			my %vars = %{$self->{'vars'}};
 			delete $vars{$name};

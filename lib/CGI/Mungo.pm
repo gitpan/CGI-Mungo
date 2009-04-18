@@ -40,7 +40,7 @@ use CGI::Mungo::Response;
 use CGI::Mungo::Session;	#for session management
 use CGI::Mungo::Request;
 use Carp;
-our $VERSION = "1.2";
+our $VERSION = "1.3";
 #########################################################
 
 =pod
@@ -85,6 +85,7 @@ sub new{
 	my $response = $m->getResponse();
 
 Returns an instance of the response plugin object, previously defined in the constructor options.
+See L<CGI::Mungo::Response> for more details.
 
 =cut
 
@@ -99,6 +100,10 @@ sub getResponse{
 
 =item getSession()
 
+	my $session = $m->getSession();
+
+Returns an instance of the <CGI::Mungo::Session> object.
+
 =cut
 
 ###########################################################
@@ -111,6 +116,10 @@ sub getSession{
 =pod
 
 =item getRequest()
+
+	my $request = $m->getRequest();
+
+Returns an instance of the L<CGI::Mungo::Request> object.
 
 =cut
 
@@ -125,6 +134,16 @@ sub getRequest{
 
 =item setActions()
 
+	my %actions = (
+		'default' => \&showMenu().
+		'list' => \%showList() 
+	)
+	$m->setActions(\%actions);
+
+Sets the actions of the web application using a hash reference. The names of the keys in the hash
+reference will match the value of the given "action" form field from the current request. Hash reference values
+can be references to subs or annoymous subs.
+
 =cut
 
 ###########################################################
@@ -138,6 +157,11 @@ sub setActions{
 =pod
 
 =item getAction()
+
+	my $action = $m->getAction();
+
+Returns the curent action that the web application is performing. This is the current value of the "action"
+request form field.
 
 =cut
 
@@ -158,6 +182,11 @@ sub getAction{
 =pod
 
 =item run()
+
+	$m->run();
+
+This methood is required for the web application to deal with the current request.
+It should be called after any setup is done.
 
 =cut
 
@@ -182,6 +211,24 @@ sub run{	#run the code for the given action
 	$response->display();	#display the output to the browser
 	return 1;
 }
+#########################################################
+
+=pod
+
+=item getThisUrl()
+
+	my $url = $m->getThisUrl();
+
+Returns the full URL for the current script.
+
+=cut
+
+###########################################################
+sub getThisUrl{
+	my $self = shift;
+	my $url = $ENV{'SCRIPT_URI'};
+	return $url;
+}
 ###########################################################
 # Private methods
 ###########################################################
@@ -193,7 +240,7 @@ sub _init{	#things to do when this object is created
 	my $response = $self->getResponse();
 	my $session = $self->getSession();
 	my $existingSession = 0;
-	if($session->read()){	#cehck for an existing session
+	if($session->read()){	#check for an existing session
 		if($session->validate()){
 			$existingSession = 1;
 			$self->log("we have an existing session");
@@ -259,5 +306,6 @@ Copyright (c) 2009 MacGyveR. All rights reserved.
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 =cut
+
 ###########################################################
 return 1;

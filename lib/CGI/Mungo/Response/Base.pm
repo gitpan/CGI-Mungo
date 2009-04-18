@@ -19,9 +19,9 @@ Response Base - Base object for view plugins
 
 This object should not be used directly, a new class should be created which inherits this one istead.
 
-All response plugins should override at least the display() method.
+All response plugins should override at least the display() method and they all a sub class of L<HTTP::Response>.
 
-The module L<CGI::Mungo::Response> will load the specified respomse plugin on script startup.
+The module L<CGI::Mungo::Response> will load the specified response plugin on script startup.
 
 =head1 METHODS
 

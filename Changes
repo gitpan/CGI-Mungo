@@ -1,3 +1,23 @@
+Mungo 1.3 -- 18/04/2009
+
+	Added more pod
+	
+	Now we use the correct way of placeholder replacement
+	
+	New function in mungo added
+	
+	Untainted session contents
+	
+	Moved utility function out of mungo and into utils
+	
+	We can now store "0" in session variables
+	
+	Now logs if template path is not found
+	
+	Template path changed
+	
+	Example error template added
+
 Mungo 1.2 -- 07/03/2009
 
 	Functionality bugs fixed in CGI::Mungo::Response::SimpleTemplate

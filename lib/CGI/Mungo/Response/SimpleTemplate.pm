@@ -1,9 +1,31 @@
 #response object
 package CGI::Mungo::Response::SimpleTemplate;
+
+=pod
+
+=head1 NAME
+
+Response SimpleTemplate - Simple templating view plugin
+
+=head1 SYNOPSIS
+
+	my $response = $mungo->getResponse();
+	$response->setTemplateVar("hello", $something);
+
+=head1 DESCRIPTION
+
+This view plugin allows you to read a template file and replace placholders with scalar variables.
+
+=head1 METHODS
+
+=over 4
+
+=cut
+
 use strict;
 use warnings;
 use base qw(CGI::Mungo::Response::Base CGI::Mungo::Log);
-our $templateLoc = "/var/httpd/lowercall/cgi-shl/data";	#where the templates are stored
+our $templateLoc = "../root/templates";	#where the templates are stored
 #########################################################
 sub new{
 	my($class, $mungo) = @_;
@@ -76,6 +98,9 @@ sub _getContent{
 	if($self->getError()){	#_parseFile may have errored
 		$self->setTemplateVar('message', $self->getError());
 		$content = $self->_parseFile("genericerror");
+		if(!$content){	#_parseFile may have errored again
+			$self->log($self->getError());	#just log it so we have a record of this
+		}
 	}
 	return $content;
 }
@@ -124,19 +149,45 @@ sub _getTemplateLocation{
 ##########################################################
 sub _getHash{
 	my($self, $name) = @_;
-	my $mungo = $self->getMungo();
-	my $request = $mungo->getRequest();
-	my $params = $request->getParameters();
 	if($name eq "message" && $self->getError()) {	#need to print the error message here
 		return $self->getError();
 	}
-	if(defined($params->{$name})){
-		return $params->{$name};
+	if(defined($self->getTemplateVar($name))){
+		return $self->getTemplateVar($name);
 	}
 	else{
 		$self->log("$name is undefined");
 		return "";
 	}
 }
+##############################################################
+
+=pod
+
+=back
+
+=head1 Notes
+
+If an error occurs a template called "genericerror.html" will be used instead of the specified template.
+Please make sure you have this file, there is an example of this in the "root/templates" directory of this module.
+
+To change the template location use the following code at the top of your script:
+
+	$CGI::Mungo::Response::SimpleTemplate::templateLoc = "../root";
+
+=head1 Author
+
+MacGyveR <dumb@cpan.org>
+
+Development questions, bug reports, and patches are welcome to the above address
+
+=head1 Copyright
+
+Copyright (c) 2009 MacGyveR. All rights reserved.
+
+This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+
+=cut
+
 #########################################################
 return 1;

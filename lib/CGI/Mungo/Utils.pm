@@ -14,5 +14,11 @@ sub _getScriptName{	#returns the basename of the running script
 	}
 	return undef;
 }
+###########################################################
+sub getThisUrl{
+	my $self = shift;
+	my $url = $ENV{'SCRIPT_URI'};
+	return $url;
+}
 #################################################
 return 1;
