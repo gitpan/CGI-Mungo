@@ -40,12 +40,10 @@ use CGI::Mungo::Response;
 use CGI::Mungo::Session;	#for session management
 use CGI::Mungo::Request;
 use Carp;
-our $VERSION = "1.3";
+our $VERSION = "1.4";
 #########################################################
 
-=pod
-
-=item new()
+=item new(\%options)
 
 	my $options = {
 		'responsePlugin' => 'Some::Class',
@@ -102,7 +100,7 @@ sub getResponse{
 
 	my $session = $m->getSession();
 
-Returns an instance of the <CGI::Mungo::Session> object.
+Returns an instance of the L<CGI::Mungo::Session> object.
 
 =cut
 
@@ -143,6 +141,8 @@ sub getRequest{
 Sets the actions of the web application using a hash reference. The names of the keys in the hash
 reference will match the value of the given "action" form field from the current request. Hash reference values
 can be references to subs or annoymous subs.
+
+An action of 'default' can be used when a visitor does not request a specific action.
 
 =cut
 
@@ -286,6 +286,27 @@ sub _getOption{
 =pod
 
 =back
+
+=head1 CONFIGURATION SUMMARY
+
+The following list gives a summary of each Mungo 
+configuration options. 
+
+=head3 responsePlugin
+
+A scalar string consisting of the response class to use.
+
+See L<CGI::Mungo::Response::Base> for details on how to create your own response class, or
+a list of response classes provided in this package.
+
+=head3 checkReferer
+
+Flag to indicate if referer checking should be performed. When enabled an
+error will raised when the referer is not present or does not contain the server's
+hostname.
+
+This option is enabled by default.
+
 
 =head1 Notes
 

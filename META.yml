@@ -1,6 +1,6 @@
 ---
 name: CGI-Mungo
-version: 1.3
+version: 1.4
 author:
   - 'MacGyveR <dumb@cpan.org>'
 abstract: Very simple CGI web framework
@@ -13,19 +13,20 @@ requires:
   Digest::MD5: ""
   File::Basename: ""
   HTTP::Response: ""
+  Template: ""
 build_requires:
   HTTP::Daemon: ""
   HTTP::Response: ""
   HTTP::Status: ""
   Test::More: ""
-generated_by: Module::Build version 0.31012
+generated_by: Module::Build version 0.280801
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html
   version: 1.2
 provides:
   CGI::Mungo:
     file: lib/CGI/Mungo.pm
-    version: 1.3
+    version: 1.4
   CGI::Mungo::Base:
     file: lib/CGI/Mungo/Base.pm
   CGI::Mungo::Log:
@@ -40,9 +41,11 @@ provides:
     file: lib/CGI/Mungo/Response/Raw.pm
   CGI::Mungo::Response::SimpleTemplate:
     file: lib/CGI/Mungo/Response/SimpleTemplate.pm
+  CGI::Mungo::Response::TemplateToolkit:
+    file: lib/CGI/Mungo/Response/TemplateToolkit.pm
   CGI::Mungo::Session:
     file: lib/CGI/Mungo/Session.pm
   CGI::Mungo::Utils:
     file: lib/CGI/Mungo/Utils.pm
 resources:
-  license: ~
+  license: http://dev.perl.org/licenses/

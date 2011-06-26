@@ -1,6 +1,29 @@
 #Session functions
 #mt	20070113	cookies should now expire
 package CGI::Mungo::Session;
+
+=pod
+
+=head1 NAME
+
+CGI::Mungo::Session - Session class
+
+=head1 SYNOPSIS
+
+	my $s = $mungo->getSession();
+	$s->setVar('name', 'value');
+	my $var = $s->getVar('name');
+
+=head1 DESCRIPTION
+
+Class to deal with session management.
+
+=head1 METHODS
+
+=over 4
+
+=cut
+
 use strict;
 use warnings;
 use Digest::MD5;
@@ -24,8 +47,6 @@ sub validate{	#runs the defined sub to see if this sesion is validate
 	if($self->getVar('remoteIp')){
 		if($self->getVar('remoteIp') eq $ENV{'REMOTE_ADDR'}){
 			if($self->getVar('scriptPath') && $self->getVar('scriptPath') eq $ENV{'SCRIPT_NAME'}){
-				#print STDERR "$0: Session ip " . $self->getVar('remoteIp') . " = " . $ENV{'REMOTE_ADDR'} . "\n"; 
-				#print STDERR "$0: Session path " . $self->getVar('scriptPath') . " = " . $ENV{'SCRIPT_NAME'} . "\n"; 
 				return 1;
 			}
 			else{
@@ -41,12 +62,21 @@ sub validate{	#runs the defined sub to see if this sesion is validate
 	}
 	return 0;
 }
+################################################################################################################
+
+=item setVar()
+
+	$s->setVar('name', 'value');
+
+Takes two arguments, first the name of the variable then the value of the variable to store.
+
+=cut
+
 ##########################################################################################################################
 sub setVar{	#stores a variable in the session
 	my($self, $name, $value) = @_;
 	$self->_storeVar($name, $value);
-	$self->_write();
-	return 1;
+	return $self->_write();
 }
 ##########################################################################################################################
 sub getVar{	#gets a stored variable from the session
@@ -79,6 +109,24 @@ sub getId{	#returns the session id
 	return $self->{'id'};
 }
 ##############################################################################################################
+
+=item create()
+
+	$response = $wf->getResponse();
+	my $hashref = {
+		username => "bob"
+	};
+	$s->create($hashref, $response);
+
+Creates a new session for the visitor.
+
+This saves the contents of the given hash reference into the session.
+
+The correct Set-Cookie header will be issued through the provided L<CGI::Mungo::Response> object.
+
+=cut
+
+##############################################################################################################
 sub create{	#creates a server-side cookie for the session
 	my($self, $hash_p, $response) = @_;
 	my $result = 0;
@@ -86,27 +134,31 @@ sub create{	#creates a server-side cookie for the session
 	my $ctx = Digest::MD5->new;
 	$ctx->add($sessionId);
 	$sessionId = $self->_getPrefix() . $ctx->hexdigest;
-	if(open(SSIDE, ">/tmp/$sessionId")){
-		close(SSIDE);
-		$self->setId($sessionId);	#remember the session id
-		#set some initial values
-		$self->setVar('remoteIp', $ENV{'REMOTE_ADDR'});
-		$self->setVar('scriptPath', $ENV{'SCRIPT_NAME'});
-		$result = 1;
+	
+	$self->setId($sessionId);	#remember the session id
+	#set some initial values
+	$self->setVar('remoteIp', $ENV{'REMOTE_ADDR'});
+	$self->setVar('scriptPath', $ENV{'SCRIPT_NAME'});
+	while(my($name, $value) = each(%{$hash_p})){	#save any user provided variables
+		$self->setVar($name, $value);
+	}
+	if(!$self->getError()){	#all ok so far
+		my $domain = $ENV{'HTTP_HOST'};	#use the full domain name here
 		if($response){
-			my $cookie = &Set_Cookie(NAME => 'SESSION', VALUE => $sessionId, EXPIRE => 0);
+			my $cookie = &Set_Cookie(NAME => 'SESSION', VALUE => $sessionId, EXPIRE => 0, DOMAIN => $domain);
 			if($cookie =~ m/^([^ ]+): (.+)$/){
 				$response->header($1 => $2);
+				$result = 1;
 			}
 			else{
 				$self->setError("Invalid cookie line: $cookie");
 			}
 		}
 		else{	#old method if it is still used
-			print &Set_Cookie(NAME => 'SESSION', VALUE => $sessionId, EXPIRE => 0);
+			print &Set_Cookie(NAME => 'SESSION', VALUE => $sessionId, EXPIRE => 0, DOMAIN => $domain);
+			$result = 1;
 		}
 	}
-	else{$self->setError("Cant create session: $!");}
 	return $result;
 }
 ##############################################################################################################
@@ -252,5 +304,27 @@ sub _getPrefix{	#this should be a config option
 	return $prefix;
 }
 #####################################################################################################################
+
+=pod
+
+=back
+
+=head1 Notes
+
+=head1 Author
+
+MacGyveR <dumb@cpan.org>
+
+Development questions, bug reports, and patches are welcome to the above address
+
+=head1 Copyright
+
+Copyright (c) 2009 MacGyveR. All rights reserved.
+
+This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+
+=cut
+
+##########################################
 return 1;
 END {}

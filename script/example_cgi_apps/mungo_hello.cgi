@@ -2,11 +2,12 @@
 use strict;
 use warnings;
 use lib qw(lib ../lib ../../lib);
-use Mungo;
+use CGI::Mungo;
 my $options = {
-	'response' => 'Mungo::Response::Raw'
+	'responsePlugin' => 'CGI::Mungo::Response::Raw',
+	'checkReferer' => 0
 };
-my $m = Mungo->new($options);
+my $m = CGI::Mungo->new($options);
 my $actions = {
 	"default" => \&hello
 };

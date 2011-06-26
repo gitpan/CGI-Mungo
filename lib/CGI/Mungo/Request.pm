@@ -9,10 +9,12 @@ CGI::Mungo::Request - Form request class
 
 =head1 SYNOPSIS
 
+	my $r = $mungo->getRequest();
+	my $params = $r->getParameters();
+
 =head1 DESCRIPTION
 
-All action subs are passed a L<CGI::Mungo> object as the only parameter, from this you should be able to reach
-everything you need.
+Class to deal with the current page request
 
 =head1 METHODS
 
@@ -25,8 +27,6 @@ use warnings;
 use CGI;
 use Carp;
 #########################################################
-
-=pod
 
 =item new()
 
@@ -50,6 +50,10 @@ sub new{
 =pod
 
 =item getParameters()
+
+	my $params = $r->getParameters();
+
+Returns a hash reference of all the GET/POST values from the current request.
 
 =cut
 
@@ -110,9 +114,9 @@ sub _setParameters{
 	my $self = shift;
 	my $cgi = CGI::new();   #create a new cgi object
 	foreach my $param ($cgi->param()){
-      my $value = $cgi->param($param);
-      $self->{'_parameters'}->{$param} = $value;  #save
-   }
+		my $value = $cgi->param($param);
+		$self->{'_parameters'}->{$param} = $value;  #save
+	}
 	return 1;
 }
 ###########################################################

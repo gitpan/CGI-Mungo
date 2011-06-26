@@ -6,15 +6,13 @@ use HTTP::Status;
 use HTTP::Response;
 use Data::Dumper;
 use Carp;
-my $address = `hostname --fqdn`;
-chomp $address;
+my $address = "127.0.0.1";
 my $webRoot = "example_cgi_apps";
 my $d;
-print "Waiting for port to become ready";
+print "Waiting for port to become ready\n";
 while(!$d){
 	$d = HTTP::Daemon->new(
-		LocalAddr => $address,
-    	LocalPort => 4000
+		LocalAddr => $address
 	);
 	print ".";
 	sleep 1;
@@ -23,7 +21,7 @@ print "\n";
 if($d){
 	$ENV{'SERVER_NAME'} = $address;
 	my $baseUrl = $d->url();
-	print "Please contact me at: " . $baseUrl . "\n";
+	print "Point your browser to: " . $baseUrl . "mungo_hello.cgi\n";
 	while(my $c = $d->accept) {
     	while(my $r = $c->get_request) {
         	if($r->method eq 'GET' || $r->method() eq "POST") {

@@ -70,6 +70,22 @@ sub _getDisplayedHeader{
 
 =back
 
+=head1 Provided classes
+
+In this package there are some responses already available for use:
+
+=over 4
+
+=item Raw
+
+See L<CGI::Mungo::Response::Raw> for details.
+
+=item SimpleTemplate
+
+See L<CGI::Mungo::Response::SimpleTemplate> for details.
+
+=back
+
 =cut
 
 #########################################################

@@ -1,11 +1,11 @@
 #response object
-package CGI::Mungo::Response::SimpleTemplate;
+package CGI::Mungo::Response::TemplateToolkit;
 
 =pod
 
 =head1 NAME
 
-Response SimpleTemplate - Simple templating view plugin
+Response TemplateToolkit - View plugin using template toolkit
 
 =head1 SYNOPSIS
 
@@ -26,6 +26,7 @@ With this class you can specify empty Mungo actions to just display a static pag
 
 use strict;
 use warnings;
+use Template;
 use base qw(CGI::Mungo::Response::Base CGI::Mungo::Log);
 our $templateLoc = "../root/templates";	#where the templates are stored
 #########################################################
@@ -35,6 +36,7 @@ sub new{
 	$self->{'_template'} = undef;	
 	$self->{'_templateVars'} = {};
 	bless $self, $class;
+	$self->setTemplateVar("self", $ENV{'SCRIPT_NAME'});	#include this var by default
 	return $self;
 }
 #########################################################
@@ -49,9 +51,6 @@ An file extension of '.html' will be automatically appended to this name.
 
 The template will be fetched from the template directory, See the L<Notes>
 section for more details.
-
-If an undefined template is given a default will be assumed, which is the default
-action.
 
 =cut
 
@@ -113,6 +112,25 @@ sub display{	#this sub will display the page headers if needed
 	return 1;
 }
 #########################################################
+
+=pod
+
+=item setError($message)
+
+	$response->setError("something has broken");
+
+Set an error message for the response, which is accessible in the error template
+as [% message %].
+
+=cut
+
+#########################################################
+sub setError(){
+	my($self, $message) = @_;
+	$self->setTemplateVar("message", $message);	#so we can access the error message via smarty
+	return $self->SUPER::setError($message);	#save the message for later in the instance
+}
+#########################################################
 sub setTemplateVar{
 	my($self, $name, $value) = @_;
 	$self->{'_templateVars'}->{$name} = $value;
@@ -126,47 +144,38 @@ sub getTemplateVar{
 #########################################################
 # private methods
 ########################################################
+sub _getTemplateVars{
+	my($self, $name) = @_;
+	return $self->{'_templateVars'};
+}
+#########################################################
 sub _getContent{
 	my $self = shift;
 	my $content;
-	if(!$self->getError()){
-		$content = $self->_parseFile($self->getTemplate());
+	my $tt = Template->new(
+		{
+			INCLUDE_PATH => $self->_getTemplateLocation(),
+			INTERPOLATE  => 1,
+		}
+	);
+	if($tt){
+		if(!$self->getError()){
+			if(!$tt->process($self->getTemplate() . ".html", $self->_getTemplateVars(), \$content)){
+				$self->setError($tt->error());
+			}
+		}
+	}
+	else{
+		$self->setError($Template::ERROR);
 	}
 	if($self->getError()){	#_parseFile may have errored
 		$self->setTemplateVar('message', $self->getError());
-		$content = $self->_parseFile("genericerror");
+		$tt->process("genericerror.html", $self->_getTemplateVars(), $content);
 		if(!$content){	#_parseFile may have errored again
 			$self->log($self->getError());	#just log it so we have a record of this
 		}
 	}
 	return $content;
-}
-##################################################################################
-sub _readFile{
-	my($self, $file) = @_;
-	my $content;
-	if(open(CONT, "<$file")){
-		while(my $line = <CONT>){
-			$content .= $line
-		}
-		close(CONT);
-	}
-	else{
-		$self->setError("Cant open file: $file: $!");
-	}
-	return $content;
-}
-##################################################################################
-sub _parseFile{	#this returns the contents of a page
-	my($self, $page) = @_;
-	my $contents = $self->_readFile($self->_getTemplateLocation() . '/' . $page . ".html");
-	if($contents){
-		$contents =~ s/\[% INCLUDE ([a-z\-\/]+); %\]/$self->_parseFile('includes\/' . $1)/eg;	#include any component files first
-		$contents =~ s/<!--self-->/$ENV{'SCRIPT_NAME'}/g;
-		$contents =~ s/<!--(\w+)-->/$self->_getHash($1)/eg;
-		return $contents;
-	}
-	return undef;
 }
 ###########################################################
 sub _getTemplateNameForAction{
@@ -183,20 +192,6 @@ sub _getTemplateNameForAction{
 sub _getTemplateLocation{
 	return $templateLoc;
 }
-##########################################################
-sub _getHash{
-	my($self, $name) = @_;
-	if($name eq "message" && $self->getError()) {	#need to print the error message here
-		return $self->getError();
-	}
-	if(defined($self->getTemplateVar($name))){
-		return $self->getTemplateVar($name);
-	}
-	else{
-		$self->log("$name is undefined");
-		return "";
-	}
-}
 ##############################################################
 
 =pod
@@ -212,6 +207,10 @@ To change the template location use the following code at the top of your script
 
 	$CGI::Mungo::Response::SimpleTemplate::templateLoc = "../root";
 
+=head1 Sess also
+
+L<Template>
+
 =head1 Author
 
 MacGyveR <dumb@cpan.org>
@@ -220,7 +219,7 @@ Development questions, bug reports, and patches are welcome to the above address
 
 =head1 Copyright
 
-Copyright (c) 2009 MacGyveR. All rights reserved.
+Copyright (c) 2011 MacGyveR. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 

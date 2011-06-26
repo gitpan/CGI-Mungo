@@ -12,7 +12,8 @@ my $build = Module::Build->new(
 		"Carp" => "",
 		"Digest::MD5" => "",
 		"File::Basename" => "",
-		"Data::Dumper" => ""
+		"Data::Dumper" => "",
+		"Template" => ""
 	},
 	build_requires => {
 		"Test::More" => "",
