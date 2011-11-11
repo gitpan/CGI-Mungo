@@ -1,32 +1,24 @@
 ---
-name: CGI-Mungo
-version: 1.4
+abstract: 'Very simple CGI web framework'
 author:
   - 'MacGyveR <dumb@cpan.org>'
-abstract: Very simple CGI web framework
-license: perl
-requires:
-  CGI: ""
-  CGI::Thin::Cookies: ""
-  Carp: ""
-  Data::Dumper: ""
-  Digest::MD5: ""
-  File::Basename: ""
-  HTTP::Response: ""
-  Template: ""
 build_requires:
-  HTTP::Daemon: ""
-  HTTP::Response: ""
-  HTTP::Status: ""
-  Test::More: ""
-generated_by: Module::Build version 0.280801
+  HTTP::Daemon: 0
+  HTTP::Response: 0
+  HTTP::Status: 0
+  Test::More: 0
+configure_requires:
+  Module::Build: 0.36
+generated_by: 'Module::Build version 0.3603'
+license: perl
 meta-spec:
-  url: http://module-build.sourceforge.net/META-spec-v1.2.html
-  version: 1.2
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: CGI-Mungo
 provides:
   CGI::Mungo:
     file: lib/CGI/Mungo.pm
-    version: 1.4
+    version: 1.5
   CGI::Mungo::Base:
     file: lib/CGI/Mungo/Base.pm
   CGI::Mungo::Log:
@@ -47,5 +39,15 @@ provides:
     file: lib/CGI/Mungo/Session.pm
   CGI::Mungo::Utils:
     file: lib/CGI/Mungo/Utils.pm
+requires:
+  CGI: 0
+  CGI::Thin::Cookies: 0
+  Carp: 0
+  Data::Dumper: 0
+  Digest::MD5: 0
+  File::Basename: 0
+  HTTP::Response: 0
+  Template: 0
 resources:
   license: http://dev.perl.org/licenses/
+version: 1.5

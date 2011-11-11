@@ -40,7 +40,7 @@ use CGI::Mungo::Response;
 use CGI::Mungo::Session;	#for session management
 use CGI::Mungo::Request;
 use Carp;
-our $VERSION = "1.4";
+our $VERSION = "1.5";
 #########################################################
 
 =item new(\%options)
@@ -243,14 +243,14 @@ sub _init{	#things to do when this object is created
 	if($session->read()){	#check for an existing session
 		if($session->validate()){
 			$existingSession = 1;
-			$self->log("we have an existing session");
+			$self->log("We have an existing session");
 		}
 	}
-	if($session->getError()){	#problem read existing session
-		$response->setError($session->getError());
+	if($session->getError()){	#problem read existing session, just log and create a new one
+		$self->log($session->getError());
 	}
 	elsif(!$existingSession){	#start a new session
-		$self->log("creating new session");
+		$self->log("Creating new session");
 		if(!$session->create({}, $response)){
 			$response->setError($session->getError());
 		}
@@ -322,7 +322,7 @@ Development questions, bug reports, and patches are welcome to the above address
 
 =head1 Copyright
 
-Copyright (c) 2009 MacGyveR. All rights reserved.
+Copyright (c) 2011 MacGyveR. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 

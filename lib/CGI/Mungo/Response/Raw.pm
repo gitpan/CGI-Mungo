@@ -72,8 +72,7 @@ sub display{	#this sub will display the page headers if needed
 			my $content = $self->_getContent();	#get the contents of the template
 			$self->content($content);
 		}
-		$output = $self->as_string();
-		$output =~ s/^200 OK\n//i;	#remove code and message as cgi does not have control over these
+		$output = "Status: " . $self->as_string();
 	}
 	print $output;
 	
@@ -106,7 +105,7 @@ Development questions, bug reports, and patches are welcome to the above address
 
 =head1 Copyright
 
-Copyright (c) 2009 MacGyveR. All rights reserved.
+Copyright (c) 2011 MacGyveR. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 

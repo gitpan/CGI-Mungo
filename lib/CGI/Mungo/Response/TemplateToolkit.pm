@@ -36,7 +36,7 @@ sub new{
 	$self->{'_template'} = undef;	
 	$self->{'_templateVars'} = {};
 	bless $self, $class;
-	$self->setTemplateVar("self", $ENV{'SCRIPT_NAME'});	#include this var by default
+	$self->setTemplateVar("env", \%ENV);	#include this var by default
 	return $self;
 }
 #########################################################
@@ -104,8 +104,7 @@ sub display{	#this sub will display the page headers if needed
 			my $content = $self->_getContent();	#get the contents of the template
 			$self->content($content);
 		}
-		$output = $self->as_string();
-		$output =~ s/^200 OK\n//i;	#remove code and message as cgi does not have control over these
+		$output = "Status: " . $self->as_string();
 	}
 	print $output;
 	$self->_setDisplayedHeader();	#we wont display the header again
@@ -131,6 +130,20 @@ sub setError(){
 	return $self->SUPER::setError($message);	#save the message for later in the instance
 }
 #########################################################
+
+=pod
+
+=item setTemplateVar($name, $value)
+
+	$response->setTemplatevar("name", "Bob");
+
+Creates a template variable with the specified name and value.
+The variable may be of any type and can be access from the template in the 
+usual way.
+
+=cut
+
+#########################################################
 sub setTemplateVar{
 	my($self, $name, $value) = @_;
 	$self->{'_templateVars'}->{$name} = $value;
@@ -154,8 +167,7 @@ sub _getContent{
 	my $content;
 	my $tt = Template->new(
 		{
-			INCLUDE_PATH => $self->_getTemplateLocation(),
-			INTERPOLATE  => 1,
+			INCLUDE_PATH => $self->_getTemplateLocation()
 		}
 	);
 	if($tt){
@@ -170,7 +182,7 @@ sub _getContent{
 	}
 	if($self->getError()){	#_parseFile may have errored
 		$self->setTemplateVar('message', $self->getError());
-		$tt->process("genericerror.html", $self->_getTemplateVars(), $content);
+		$tt->process("genericerror.html", $self->_getTemplateVars(), \$content);
 		if(!$content){	#_parseFile may have errored again
 			$self->log($self->getError());	#just log it so we have a record of this
 		}

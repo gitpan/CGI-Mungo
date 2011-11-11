@@ -319,7 +319,7 @@ Development questions, bug reports, and patches are welcome to the above address
 
 =head1 Copyright
 
-Copyright (c) 2009 MacGyveR. All rights reserved.
+Copyright (c) 2011 MacGyveR. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 

@@ -1,3 +1,15 @@
+Mungo 1.5 -- 11/11/2011
+
+	Fixed bug that stopped jquery working with template toolkit templates
+	
+	On session problems just log and create a new one
+	
+	The correct http response code is sent when an error occurs
+	
+	we now export the whole of %env to the template toolkit response template
+	
+	fixed template toolkit error display bug
+
 Mungo 1.4 -- 26/06/2011
 
 	Added more documentation
