@@ -29,8 +29,6 @@ everything you need.
 
 =head1 METHODS
 
-=over 4
-
 =cut
 
 use strict;
@@ -40,14 +38,16 @@ use CGI::Mungo::Response;
 use CGI::Mungo::Session;	#for session management
 use CGI::Mungo::Request;
 use Carp;
-our $VERSION = "1.5";
+our $VERSION = "1.6";
 #########################################################
 
-=item new(\%options)
+=head2 new(\%options)
 
 	my $options = {
 		'responsePlugin' => 'Some::Class',
-		'checkReferer' => 0
+		'checkReferer' => 0,
+		'sessionClass' => 'Some::Class',
+		'requestClass' => 'Some::Class'
 	};
 	my $m = CGI::Mungo->new($options);
 
@@ -61,11 +61,19 @@ sub new{
 	my($class, $options) = @_;
 	if($options->{'responsePlugin'}){	#this option is mandatory
 		my $self = $class->SUPER::new();
-		$self->{'_session'} = CGI::Mungo::Session->new();	
-		$self->{'_request'} = CGI::Mungo::Request->new();
 		$self->{'_actions'} = {};
 		$self->{'_options'} = $options;
 		$self->{'_response'} = CGI::Mungo::Response->new($self, $self->_getOption('responsePlugin'));	
+		my $sessionClass = $class . "::Session";
+		if($self->_getOption('sessionClass')){
+			$sessionClass = $self->_getOption('sessionClass');
+		}
+		$self->{'_session'} = $sessionClass->new();	
+		my $requestClass = $class . "::Request";
+		if($self->_getOption('requestClass')){
+			$requestClass = $self->_getOption('requestClass');
+		}
+		$self->{'_request'} = $requestClass->new();
 		$self->_init();	#perform initial setup
 		return $self;
 	}
@@ -78,7 +86,7 @@ sub new{
 
 =pod
 
-=item getResponse()
+=head2 getResponse()
 
 	my $response = $m->getResponse();
 
@@ -96,7 +104,7 @@ sub getResponse{
 
 =pod
 
-=item getSession()
+=head2 getSession()
 
 	my $session = $m->getSession();
 
@@ -113,7 +121,7 @@ sub getSession{
 
 =pod
 
-=item getRequest()
+=head2 getRequest()
 
 	my $request = $m->getRequest();
 
@@ -130,7 +138,7 @@ sub getRequest{
 
 =pod
 
-=item setActions()
+=head2 setActions(\%actions)
 
 	my %actions = (
 		'default' => \&showMenu().
@@ -156,7 +164,7 @@ sub setActions{
 
 =pod
 
-=item getAction()
+=head2 getAction()
 
 	my $action = $m->getAction();
 
@@ -181,7 +189,7 @@ sub getAction{
 
 =pod
 
-=item run()
+=head2 run()
 
 	$m->run();
 
@@ -211,24 +219,6 @@ sub run{	#run the code for the given action
 	$response->display();	#display the output to the browser
 	return 1;
 }
-#########################################################
-
-=pod
-
-=item getThisUrl()
-
-	my $url = $m->getThisUrl();
-
-Returns the full URL for the current script.
-
-=cut
-
-###########################################################
-sub getThisUrl{
-	my $self = shift;
-	my $url = $ENV{'SCRIPT_URI'};
-	return $url;
-}
 ###########################################################
 # Private methods
 ###########################################################
@@ -240,19 +230,19 @@ sub _init{	#things to do when this object is created
 	my $response = $self->getResponse();
 	my $session = $self->getSession();
 	my $existingSession = 0;
+	#don't care about errors below
 	if($session->read()){	#check for an existing session
 		if($session->validate()){
 			$existingSession = 1;
-			$self->log("We have an existing session");
+			$self->log("Existing session: " . $session->getId());
 		}
 	}
-	if($session->getError()){	#problem read existing session, just log and create a new one
-		$self->log($session->getError());
-	}
-	elsif(!$existingSession){	#start a new session
-		$self->log("Creating new session");
-		if(!$session->create({}, $response)){
-			$response->setError($session->getError());
+	if(!$existingSession){	#start a new session
+		if($session->create({}, $response)){
+			$self->log("Created new session: " . $session->getId());
+		}
+		else{
+			$response->setError($session->getError());	#now care about errors
 		}
 	}
 	return 1;
@@ -279,13 +269,15 @@ sub _getActions{
 ##########################################################
 sub _getOption{
 	my($self, $key) = @_;
-	return $self->{'_options'}->{$key};
+	my $value = undef;
+	if(defined($self->{'_options'}->{$key})){	#this config option has been set
+		$value = $self->{'_options'}->{$key};
+	}
+	return $value;
 }
 ###########################################################
 
 =pod
-
-=back
 
 =head1 CONFIGURATION SUMMARY
 
@@ -307,12 +299,29 @@ hostname.
 
 This option is enabled by default.
 
+=head3 sessionClass
+
+A scalar string consisting of the session class to use. Useful if you want to change the way
+session are stored.
+
+Defaults to ref($self)::Session
+
+=head3 requestClass
+
+A scalar string consisting of the request class to use. Useful if you want to change the way
+requests are handled.
+
+Defaults to ref($self)::Request
 
 =head1 Notes
 
 To change the session prefix characters use the following code at the top of your script:
 
 	$CGI::Mungo::Session::prefix = "ABC";
+	
+To change the session file save path use the following code at the top of your script:
+
+	$CGI::Mungo::Session::path = "/var/tmp";
 
 =head1 Author
 
@@ -322,7 +331,7 @@ Development questions, bug reports, and patches are welcome to the above address
 
 =head1 Copyright
 
-Copyright (c) 2011 MacGyveR. All rights reserved.
+Copyright (c) 2012 MacGyveR. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 

@@ -20,8 +20,6 @@ With this class you can specify empty Mungo actions to just display a static pag
 
 =head1 METHODS
 
-=over 4
-
 =cut
 
 use strict;
@@ -39,7 +37,7 @@ sub new{
 }
 #########################################################
 
-=item setTemplate($template)
+=head2 setTemplate($template)
 
 	$response->setTemplate("login");
 
@@ -70,7 +68,7 @@ sub getTemplate{
 
 =pod
 
-=item display()
+=head2 display()
 
 	$response->display();
 
@@ -115,7 +113,7 @@ sub display{	#this sub will display the page headers if needed
 
 =pod
 
-=item setTemplateVar($name, $value)
+=head2 setTemplateVar($name, $value)
 
 	$response->setTemplatevar("name", "Bob");
 
@@ -172,7 +170,7 @@ sub _parseFile{	#this returns the contents of a page
 	my($self, $page) = @_;
 	my $contents = $self->_readFile($self->_getTemplateLocation() . '/' . $page . ".html");
 	if($contents){
-		$contents =~ s/\[% INCLUDE ([a-z\-\/]+); %\]/$self->_parseFile('includes\/' . $1)/eg;	#include any component files first
+		$contents =~ s/\[% INCLUDE ([a-zA-Z0-9\-\/]+); %\]/$self->_parseFile('includes\/' . $1)/eg;	#include any component files first
 		$contents =~ s/<!--self-->/$ENV{'SCRIPT_NAME'}/g;
 		$contents =~ s/<!--(\w+)-->/$self->_getHash($1)/eg;
 		return $contents;
@@ -211,8 +209,6 @@ sub _getHash{
 ##############################################################
 
 =pod
-
-=back
 
 =head1 Notes
 

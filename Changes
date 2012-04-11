@@ -1,3 +1,17 @@
+Mungo 1.6 -- 11/04/2012
+
+	Current action is now accessible from template toolkit response template automatically.
+	
+	Session and request classes can now be overridden via config.
+	
+	Session now created automatically if a invalid one is found.
+	
+	Session save path now moved to single class variable that can be overridden.
+	
+	Relaxed include regex in simple template response class.
+	
+	Framework can determine URL without mod_rewrite being used.
+
 Mungo 1.5 -- 11/11/2011
 
 	Fixed bug that stopped jquery working with template toolkit templates

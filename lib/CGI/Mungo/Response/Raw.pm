@@ -20,8 +20,6 @@ Content is displayed at the end of the page request.
 
 =head1 METHODS
 
-=over 4
-
 =cut
 
 use strict;
@@ -37,7 +35,7 @@ sub new{
 }
 #########################################################
 
-=item setContent()
+=head2 setContent()
 
 	$response->setContent("Hello World");
 
@@ -94,8 +92,6 @@ sub _getContent{
 ###########################################################
 
 =pod
-
-=back
 
 =head1 Author
 

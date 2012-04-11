@@ -20,8 +20,6 @@ Class to deal with session management.
 
 =head1 METHODS
 
-=over 4
-
 =cut
 
 use strict;
@@ -29,8 +27,10 @@ use warnings;
 use Digest::MD5;
 use Data::Dumper;
 use CGI::Thin::Cookies;
+use File::Spec;
 use base qw(CGI::Mungo::Base CGI::Mungo::Log);
 our $prefix = "MG";
+our $path = "/tmp";
 ##############################################################################################################################
 sub new{	#constructor
 	my $class = shift;
@@ -64,7 +64,7 @@ sub validate{	#runs the defined sub to see if this sesion is validate
 }
 ################################################################################################################
 
-=item setVar()
+=head2 setVar()
 
 	$s->setVar('name', 'value');
 
@@ -110,7 +110,7 @@ sub getId{	#returns the session id
 }
 ##############################################################################################################
 
-=item create()
+=head2 create()
 
 	$response = $wf->getResponse();
 	my $hashref = {
@@ -129,12 +129,12 @@ The correct Set-Cookie header will be issued through the provided L<CGI::Mungo::
 ##############################################################################################################
 sub create{	#creates a server-side cookie for the session
 	my($self, $hash_p, $response) = @_;
+	$self->setError("");	#as we are starting a new session we clear any previous errors first
 	my $result = 0;
 	my $sessionId = time() * $$;	#time in seconds * process id
 	my $ctx = Digest::MD5->new;
 	$ctx->add($sessionId);
 	$sessionId = $self->_getPrefix() . $ctx->hexdigest;
-	
 	$self->setId($sessionId);	#remember the session id
 	#set some initial values
 	$self->setVar('remoteIp', $ENV{'REMOTE_ADDR'});
@@ -169,7 +169,9 @@ sub read{	#read an existing session
 	if(defined($sessionId)){	#got a sessionid of some sort
 		my $prefix = $self->_getPrefix();
 		if($sessionId =~ m/^($prefix[a-f0-9]+)$/){	#filename valid
-			if(open(SSIDE, "</tmp/" . $1)){	#try to open the session file
+			my $path = $self->_getPath();
+			my $sessionFile = File::Spec->catfile($path, $1);
+			if(open(SSIDE, "<", $sessionFile)){	#try to open the session file
 				my $contents = "";
 				while(<SSIDE>){	#read each line of the file
 					$contents .= $_;
@@ -190,7 +192,7 @@ sub read{	#read an existing session
 				}
 			}
 			else{
-				$self->setError("Cant open session file: $!");
+				$self->setError("Cant open session file: $sessionFile: $!");
 			}
 		}
 		else{
@@ -200,13 +202,26 @@ sub read{	#read an existing session
 	return $result;
 }
 ###########################################################################################
+
+=pod
+
+=head2 delete()
+
+Remove the current session from memory, disk and expire it in the browser.
+
+=cut
+
+###########################################################################################
 sub delete{	#remove a session
 	my($self, $response) = @_;
 	my $result = 0;
 	my $sessionId = $self->getId();
 	my $prefix = $self->_getPrefix();
 	if($sessionId =~ m/^$prefix[a-f0-9]+$/){	#id valid
-		if(unlink('/tmp/' . $sessionId)){
+		my $path = $self->_getPath();
+		my $sessionFile = File::Spec->catfile($path, $sessionId);
+		if(unlink($sessionFile)){
+			$self->log("Deleted session: $sessionId");
 			if($response){
 				my $cookie = &Set_Cookie(NAME => 'SESSION', EXPIRE => 'delete');
 				if($cookie =~ m/^([^ ]+): (.+)$/){
@@ -219,7 +234,6 @@ sub delete{	#remove a session
 			else{
 				print &Set_Cookie(NAME => 'SESSION', EXPIRE => 'delete');
 			}
-			#print "Set-Cookie: SESSION=; expires Mon, 09-Dec-2002 13:46:00 GMT\n";
 			$self = undef;	#destroy this object
 			$result = 1;
 		}
@@ -227,7 +241,9 @@ sub delete{	#remove a session
 			$self->setError("Could not delete session");
 		}
 	}
-	else{$self->setError("Session ID invalid: $sessionId");}
+	else{
+		$self->setError("Session ID invalid: $sessionId");
+	}
 	return $result;
 }
 ###############################################################################################################
@@ -235,13 +251,17 @@ sub delete{	#remove a session
 ###############################################################################################################
 sub _expire{	#remove old session files
 	my $self = shift;
-	if(opendir(COOKIES, "/tmp")){
+	my $path = $self->_getPath();
+	if(opendir(COOKIES, $path)){
 		my @sessions = readdir(COOKIES);
 		foreach(@sessions){	#check each of the cookies
 			my $prefix = $self->_getPrefix();
 			if($_ =~ m/^($prefix[a-f0-9]+)$/){	#found a cookie file
-				my @stat = stat("/tmp/$1");
-				if($stat[9] < (time - 86400)){unlink "/tmp/$1";}	#cookie is more than a day old, so remove it
+				my $sessionFile = File::Spec->catfile($path, $1);
+				my @stat = stat($sessionFile);
+				if($stat[9] < (time - 86400)){	#cookie is more than a day old, so remove it
+					unlink $sessionFile;
+				}
 			}
 		}
 		closedir(COOKIES);
@@ -254,7 +274,9 @@ sub _write{	#writes a server-side cookie for the session
 	my $self = shift;
 	my $prefix = $self->_getPrefix();
 	if($self->getId() =~ m/^($prefix[a-f0-9]+)$/){	#filename valid
-		if(open(SSIDE, ">/tmp/$1")){
+		my $path = $self->_getPath();
+		my $sessionFile = File::Spec->catfile($path, $1);
+		if(open(SSIDE, ">", $sessionFile)){
 			$Data::Dumper::Freezer = 'freeze';
 			$Data::Dumper::Toaster = 'toast';
 			$Data::Dumper::Indent = 0;	#turn off formatting
@@ -304,10 +326,12 @@ sub _getPrefix{	#this should be a config option
 	return $prefix;
 }
 #####################################################################################################################
+sub _getPath{	#this should be a config option
+	return $path;
+}
+#####################################################################################################################
 
 =pod
-
-=back
 
 =head1 Notes
 
@@ -319,7 +343,7 @@ Development questions, bug reports, and patches are welcome to the above address
 
 =head1 Copyright
 
-Copyright (c) 2011 MacGyveR. All rights reserved.
+Copyright (c) 2012 MacGyveR. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 

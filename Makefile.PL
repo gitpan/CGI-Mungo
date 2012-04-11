@@ -8,6 +8,7 @@ WriteMakefile
           'EXE_FILES' => [],
           'VERSION_FROM' => 'lib/CGI/Mungo.pm',
           'PREREQ_PM' => {
+                           'File::Spec' => 0,
                            'Data::Dumper' => 0,
                            'Template' => 0,
                            'HTTP::Status' => 0,

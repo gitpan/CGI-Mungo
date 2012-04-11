@@ -15,8 +15,6 @@ Factory class for creating response objects.
 
 =head1 METHODS
 
-=over 4
-
 =cut
 
 use strict;
@@ -42,8 +40,6 @@ sub new{
 }
 #########################################################
 =pod
-
-=back
 
 =head1 Notes
 

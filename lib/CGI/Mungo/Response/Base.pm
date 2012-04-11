@@ -25,8 +25,6 @@ The module L<CGI::Mungo::Response> will load the specified response plugin on sc
 
 =head1 METHODS
 
-=over 4
-
 =cut
 
 use strict;
@@ -67,8 +65,6 @@ sub _getDisplayedHeader{
 ###########################################################
 
 =pod
-
-=back
 
 =head1 Provided classes
 

@@ -18,8 +18,6 @@ Class to deal with the current page request
 
 =head1 METHODS
 
-=over 4
-
 =cut
 
 use strict;
@@ -28,7 +26,7 @@ use CGI;
 use Carp;
 #########################################################
 
-=item new()
+=head2 new()
 
 	my $r = CGI::Mungo::Request->new();
 
@@ -49,7 +47,7 @@ sub new{
 
 =pod
 
-=item getParameters()
+=head2 getParameters()
 
 	my $params = $r->getParameters();
 
@@ -66,7 +64,7 @@ sub getParameters{	#get POST or GET data
 
 =pod
 
-=item validate()
+=head2 validate()
 
 	my $rules = {
 		'age' => {
@@ -122,8 +120,6 @@ sub _setParameters{
 ###########################################################
 
 =pod
-
-=back
 
 =head1 Notes
 

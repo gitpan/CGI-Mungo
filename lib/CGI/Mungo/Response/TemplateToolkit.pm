@@ -20,8 +20,6 @@ With this class you can specify empty Mungo actions to just display a static pag
 
 =head1 METHODS
 
-=over 4
-
 =cut
 
 use strict;
@@ -30,6 +28,15 @@ use Template;
 use base qw(CGI::Mungo::Response::Base CGI::Mungo::Log);
 our $templateLoc = "../root/templates";	#where the templates are stored
 #########################################################
+
+=head2 new($mungo)
+
+Constructor, All environment hash is saved in template variable "env" and the current action is saved as "action" so they can be accessed
+along with any other variables stored during the server action in the usual template toolkit way.
+
+=cut
+
+#########################################################
 sub new{
 	my($class, $mungo) = @_;
 	my $self = $class->SUPER::new($mungo);
@@ -37,11 +44,12 @@ sub new{
 	$self->{'_templateVars'} = {};
 	bless $self, $class;
 	$self->setTemplateVar("env", \%ENV);	#include this var by default
+	$self->setTemplateVar("action", $self->getMungo()->getAction());        #this will be handy to have too
 	return $self;
 }
 #########################################################
 
-=item setTemplate($template)
+=head2 setTemplate($template)
 
 	$response->setTemplate("login");
 
@@ -69,7 +77,7 @@ sub getTemplate{
 
 =pod
 
-=item display()
+=head2 display()
 
 	$response->display();
 
@@ -114,7 +122,7 @@ sub display{	#this sub will display the page headers if needed
 
 =pod
 
-=item setError($message)
+=head2 setError($message)
 
 	$response->setError("something has broken");
 
@@ -133,7 +141,7 @@ sub setError(){
 
 =pod
 
-=item setTemplateVar($name, $value)
+=head2 setTemplateVar($name, $value)
 
 	$response->setTemplatevar("name", "Bob");
 
@@ -208,8 +216,6 @@ sub _getTemplateLocation{
 
 =pod
 
-=back
-
 =head1 Notes
 
 If an error occurs a template called "genericerror.html" will be used instead of the specified template.
@@ -231,7 +237,7 @@ Development questions, bug reports, and patches are welcome to the above address
 
 =head1 Copyright
 
-Copyright (c) 2011 MacGyveR. All rights reserved.
+Copyright (c) 2012 MacGyveR. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 

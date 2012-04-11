@@ -17,8 +17,6 @@ Abstract class used in all other CGI::Mungo classes.
 
 =head1 METHODS
 
-=over 4
-
 =cut
 
 use strict;
@@ -34,7 +32,7 @@ sub new{
 }
 #########################################################
 
-=item setError($mesage)
+=head2 setError($mesage)
 
 	$obj->setError($message);
 
@@ -52,7 +50,7 @@ sub setError{
 
 =pod
 
-=item getError()
+=head2 getError()
 
 	$error = $obj->getError();
 
@@ -69,8 +67,6 @@ sub getError{
 ###########################################################
 
 =pod
-
-=back
 
 =head1 Notes
 

@@ -18,7 +18,7 @@ name: CGI-Mungo
 provides:
   CGI::Mungo:
     file: lib/CGI/Mungo.pm
-    version: 1.5
+    version: 1.6
   CGI::Mungo::Base:
     file: lib/CGI/Mungo/Base.pm
   CGI::Mungo::Log:
@@ -46,8 +46,9 @@ requires:
   Data::Dumper: 0
   Digest::MD5: 0
   File::Basename: 0
+  File::Spec: 0
   HTTP::Response: 0
   Template: 0
 resources:
   license: http://dev.perl.org/licenses/
-version: 1.5
+version: 1.6
