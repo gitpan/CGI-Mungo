@@ -1,3 +1,33 @@
+Mungo 1.701 -- 27/04/2013
+
+	Updated change log.
+
+Mungo 1.7 -- 27/04/2013
+
+	Fixed bug in template toolkit response class.
+	
+	Search engine friendly URLs are now supported.
+	
+	Template toolkit templates are now in UTF8.
+	
+	Correct HTTP error code sent when errors occur.
+	
+	getThisUrl() no longer matches the query string.
+	
+	Switched to CGI::Minimal.
+	
+	Now expiring sessions when the session object is destroyed.
+	
+	Template toolkit view now has full access to Mungo object.
+	
+	getHeader() method added to request class.
+	
+	More logging only sent when in debug mode.
+	
+	ETag headers now sent.
+	
+	Not modified response class to quickly return when no change in content.
+		
 Mungo 1.6 -- 11/04/2012
 
 	Current action is now accessible from template toolkit response template automatically.
