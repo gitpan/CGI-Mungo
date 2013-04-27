@@ -8,18 +8,18 @@ WriteMakefile
           'EXE_FILES' => [],
           'VERSION_FROM' => 'lib/CGI/Mungo.pm',
           'PREREQ_PM' => {
+                           'Digest::SHA1' => 0,
                            'File::Spec' => 0,
                            'Data::Dumper' => 0,
                            'Template' => 0,
                            'HTTP::Status' => 0,
-                           'CGI' => 0,
                            'Carp' => 0,
                            'CGI::Thin::Cookies' => 0,
                            'Test::More' => 0,
                            'HTTP::Response' => 0,
-                           'Digest::MD5' => 0,
                            'HTTP::Daemon' => 0,
-                           'File::Basename' => 0
+                           'File::Basename' => 0,
+                           'CGI::Minimal' => 0
                          }
         )
 ;

@@ -38,7 +38,26 @@ sub new{
 	$self->{'_mungo'} = $mungo;	#so we can access the mungo object FIXME
 	$self->{'_displayedHeader'} = 0;	#flag set on first output
 	bless $self, $class;
+	$self->__setEtag();
 	return $self;
+}
+#########################################################
+
+=pod
+
+=head2 setCacheable($seconds)
+
+	$response->setCacheable($seconds)
+
+Sets the page to be cached for the specified amount of seconds.
+
+=cut
+
+#########################################################
+sub setCacheable{
+	my($self, $seconds) = @_;
+	$self->header("Cache-Control" => "max-age=$seconds, public");
+	return 1;
 }
 #########################################################
 sub getMungo{
@@ -61,6 +80,14 @@ sub _setDisplayedHeader{
 sub _getDisplayedHeader{
 	my $self = shift;
 	return $self->{'_displayedHeader'};
+}
+###########################################################
+sub __setEtag{
+	my $self = shift;
+	my $mungo = $self->getMungo();
+	my $etag = $mungo->createEtag();	
+	$self->header("ETag" => $etag);
+	return 1;
 }
 ###########################################################
 

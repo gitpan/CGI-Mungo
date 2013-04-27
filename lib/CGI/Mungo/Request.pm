@@ -22,8 +22,10 @@ Class to deal with the current page request
 
 use strict;
 use warnings;
-use CGI;
+use CGI::Minimal;
 use Carp;
+use Data::Dumper;
+use Digest::SHA1;
 #########################################################
 
 =head2 new()
@@ -37,8 +39,10 @@ Constructor, gets all the GET/POST information from the browser request.
 ##########################################
 sub new{
 	my $class = shift;
-	my $self = {};
-	$self->{'_parameters'} = {};	
+	my $self = {
+		'_parameters' => {},
+		'__cgi' => undef
+	};
 	bless $self, $class;
 	$self->_setParameters();
 	return $self;
@@ -108,14 +112,72 @@ sub validate{	#checks %form againist the hash rules
 	return($result, \@errors);
 }
 #########################################
+
+=pod
+
+=head2 getheader($header)
+
+	$request->getHeader($name)
+
+Returns the value of the specified request header.
+
+=cut
+
+#########################################
+sub getHeader{
+	my($self, $name) = @_;
+	my $value = undef;
+	$name = uc($name);
+	$name =~ s/\-/_/g;
+	if(defined($ENV{"HTTP_" . $name})){
+		$value = $ENV{'HTTP_' . $name};
+	}
+	return $value;
+}
+####################################################
+
+=pod
+
+=head2 getDigest()
+
+	$request->getDigest()
+
+Returns a digest of the request parameters.
+
+=cut
+
+####################################################
+sub getDigest{
+	my $self = shift;
+	my $params = $self->getParameters();
+	my $sha1 = Digest::SHA1->new();
+	$sha1->add($self->__stringfy($params));
+	return $sha1->hexdigest();	
+}
+#########################################
 sub _setParameters{
 	my $self = shift;
-	my $cgi = CGI::new();   #create a new cgi object
+	my $cgi = $self->__getCgi();   
 	foreach my $param ($cgi->param()){
 		my $value = $cgi->param($param);
 		$self->{'_parameters'}->{$param} = $value;  #save
 	}
 	return 1;
+}
+################ss###########################################
+sub __getCgi{
+	my $self = shift;
+	if(!$self->{'__cgi'}){
+		$self->{'__cgi'} = CGI::Minimal->new();	#create a new cgi object
+	}
+	return $self->{'__cgi'};
+}
+####################################################
+sub __stringfy{
+	my($self, $item) = @_;
+	local $Data::Dumper::Terse = 1;
+	local $Data::Dumper::Indent = 0;
+	return Dumper($item);
 }
 ###########################################################
 

@@ -25,6 +25,7 @@ With this class you can specify empty Mungo actions to just display a static pag
 use strict;
 use warnings;
 use Template;
+use Carp;
 use base qw(CGI::Mungo::Response::Base CGI::Mungo::Log);
 our $templateLoc = "../root/templates";	#where the templates are stored
 #########################################################
@@ -44,7 +45,9 @@ sub new{
 	$self->{'_templateVars'} = {};
 	bless $self, $class;
 	$self->setTemplateVar("env", \%ENV);	#include this var by default
-	$self->setTemplateVar("action", $self->getMungo()->getAction());        #this will be handy to have too
+	$self->setTemplateVar("mungo", $mungo);        #this will be handy to have too
+	$self->setTemplateVar("action", $mungo->getAction());        #this will be handy to have too
+	$self->setTemplateVar("debug", $mungo->getOption("debug"));
 	return $self;
 }
 #########################################################
@@ -112,6 +115,9 @@ sub display{	#this sub will display the page headers if needed
 			my $content = $self->_getContent();	#get the contents of the template
 			$self->content($content);
 		}
+		if($self->getError()){	#set the error code when needed
+			$self->code(500);
+		}
 		$output = "Status: " . $self->as_string();
 	}
 	print $output;
@@ -172,10 +178,11 @@ sub _getTemplateVars{
 #########################################################
 sub _getContent{
 	my $self = shift;
-	my $content;
+	my $content = "";
 	my $tt = Template->new(
 		{
-			INCLUDE_PATH => $self->_getTemplateLocation()
+			INCLUDE_PATH => $self->_getTemplateLocation(),
+			ENCODING => 'utf-8'
 		}
 	);
 	if($tt){

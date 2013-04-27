@@ -11,6 +11,7 @@ $ENV{'SCRIPT_NAME'} = "test.cgi";
 $ENV{'SERVER_NAME'} = "www.test.com";
 $ENV{'HTTP_HOST'} = "www.test.com";
 $ENV{'HTTP_REFERER'} = "http://" . $ENV{'HTTP_HOST'};
+$ENV{'REQUEST_METHOD'} = 'GET';
 
 my $options = {
 	'responsePlugin' => 'CGI::Mungo::Response::Raw'

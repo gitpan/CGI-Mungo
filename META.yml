@@ -18,7 +18,7 @@ name: CGI-Mungo
 provides:
   CGI::Mungo:
     file: lib/CGI/Mungo.pm
-    version: 1.6
+    version: 1.7
   CGI::Mungo::Base:
     file: lib/CGI/Mungo/Base.pm
   CGI::Mungo::Log:
@@ -29,6 +29,8 @@ provides:
     file: lib/CGI/Mungo/Response.pm
   CGI::Mungo::Response::Base:
     file: lib/CGI/Mungo/Response/Base.pm
+  CGI::Mungo::Response::NotModified:
+    file: lib/CGI/Mungo/Response/NotModified.pm
   CGI::Mungo::Response::Raw:
     file: lib/CGI/Mungo/Response/Raw.pm
   CGI::Mungo::Response::SimpleTemplate:
@@ -40,15 +42,15 @@ provides:
   CGI::Mungo::Utils:
     file: lib/CGI/Mungo/Utils.pm
 requires:
-  CGI: 0
+  CGI::Minimal: 0
   CGI::Thin::Cookies: 0
   Carp: 0
   Data::Dumper: 0
-  Digest::MD5: 0
+  Digest::SHA1: 0
   File::Basename: 0
   File::Spec: 0
   HTTP::Response: 0
   Template: 0
 resources:
   license: http://dev.perl.org/licenses/
-version: 1.6
+version: 1.7

@@ -7,6 +7,7 @@ lib/CGI/Mungo/Log.pm
 lib/CGI/Mungo/Request.pm
 lib/CGI/Mungo/Response.pm
 lib/CGI/Mungo/Response/Base.pm
+lib/CGI/Mungo/Response/NotModified.pm
 lib/CGI/Mungo/Response/Raw.pm
 lib/CGI/Mungo/Response/SimpleTemplate.pm
 lib/CGI/Mungo/Response/TemplateToolkit.pm

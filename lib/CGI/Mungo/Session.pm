@@ -38,8 +38,11 @@ sub new{	#constructor
 	$self->{'id'} = undef;
 	$self->{'error'} = "";
 	$self->{'vars'} = {};
-	__PACKAGE__->_expire();	#remove old sessions
 	return $self;
+}
+#########################################################################################################################
+sub DESTROY{
+	__PACKAGE__->_expire();	#remove old sessions
 }
 #########################################################################################################################
 sub validate{	#runs the defined sub to see if this sesion is validate
@@ -254,12 +257,13 @@ sub _expire{	#remove old session files
 	my $path = $self->_getPath();
 	if(opendir(COOKIES, $path)){
 		my @sessions = readdir(COOKIES);
+		my $expire = (time - 86400);
 		foreach(@sessions){	#check each of the cookies
 			my $prefix = $self->_getPrefix();
 			if($_ =~ m/^($prefix[a-f0-9]+)$/){	#found a cookie file
 				my $sessionFile = File::Spec->catfile($path, $1);
 				my @stat = stat($sessionFile);
-				if($stat[9] < (time - 86400)){	#cookie is more than a day old, so remove it
+				if(defined($stat[9]) && $stat[9] < $expire){	#cookie is more than a day old, so remove it
 					unlink $sessionFile;
 				}
 			}

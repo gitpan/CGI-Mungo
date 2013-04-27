@@ -26,12 +26,32 @@ use Carp;
 
 	my $url = $m->getThisUrl();
 
-Returns the full URL for the current script.
+Returns the full URL for the current script, ignoring the query string if any.
 
 =cut
 
 ###########################################################
 sub getThisUrl{
+	my $self = shift;
+	my $url = $self->getSiteUrl();
+	$ENV{'REQUEST_URI'} =~ m/^([^\?]+)/;	#match everything up to the query string if any
+	$url .= $1;
+	return $url;
+}
+#########################################################
+
+=pod
+
+=head2 getSiteUrl()
+
+	my $url = $m->getSiteUrl();
+
+Returns the site URL for the current script, This includes the protocol and host name only.
+
+=cut
+
+###########################################################
+sub getSiteUrl{
 	my $self = shift;
 	my $url = "";
 	if(exists($ENV{'HTTPS'})){	#are we running on ssl?
@@ -49,7 +69,6 @@ sub getThisUrl{
 			$url .= ":" . $ENV{'SERVER_PORT'};
 		}
 	}
-	$url .= $ENV{'REQUEST_URI'};
 	return $url;
 }
 ##########################################################

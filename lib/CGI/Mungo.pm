@@ -33,12 +33,13 @@ everything you need.
 
 use strict;
 use warnings;
+use Digest::SHA1;
+use Carp;
 use base qw(CGI::Mungo::Base CGI::Mungo::Utils CGI::Mungo::Log);
 use CGI::Mungo::Response;
 use CGI::Mungo::Session;	#for session management
 use CGI::Mungo::Request;
-use Carp;
-our $VERSION = "1.6";
+our $VERSION = "1.7";
 #########################################################
 
 =head2 new(\%options)
@@ -47,7 +48,9 @@ our $VERSION = "1.6";
 		'responsePlugin' => 'Some::Class',
 		'checkReferer' => 0,
 		'sessionClass' => 'Some::Class',
-		'requestClass' => 'Some::Class'
+		'requestClass' => 'Some::Class',
+		'SefUrls' => 0,
+		'debug' => 1
 	};
 	my $m = CGI::Mungo->new($options);
 
@@ -63,17 +66,20 @@ sub new{
 		my $self = $class->SUPER::new();
 		$self->{'_actions'} = {};
 		$self->{'_options'} = $options;
-		$self->{'_response'} = CGI::Mungo::Response->new($self, $self->_getOption('responsePlugin'));	
 		my $sessionClass = $class . "::Session";
-		if($self->_getOption('sessionClass')){
-			$sessionClass = $self->_getOption('sessionClass');
+		if($self->getOption('sessionClass')){
+			$sessionClass = $self->getOption('sessionClass');
 		}
 		$self->{'_session'} = $sessionClass->new();	
 		my $requestClass = $class . "::Request";
-		if($self->_getOption('requestClass')){
-			$requestClass = $self->_getOption('requestClass');
+		if($self->getOption('requestClass')){
+			$requestClass = $self->getOption('requestClass');
+		}
+		if(!defined($self->getOption('debug'))){	#turn off debugging by default
+			$self->_setOption("debug", 0);
 		}
 		$self->{'_request'} = $requestClass->new();
+		$self->{'_response'} = CGI::Mungo::Response->new($self, $self->getOption('responsePlugin'));	#this could need access to a request object	
 		$self->_init();	#perform initial setup
 		return $self;
 	}
@@ -132,7 +138,11 @@ Returns an instance of the L<CGI::Mungo::Request> object.
 ###########################################################
 sub getRequest{
 	my $self = shift;
-	return $self->{'_request'};
+	my $request = $self->{'_request'};
+	if(!$request){
+		confess("No request object found");
+	}
+	return $request;
 }
 #########################################################
 
@@ -169,21 +179,84 @@ sub setActions{
 	my $action = $m->getAction();
 
 Returns the curent action that the web application is performing. This is the current value of the "action"
-request form field.
+request form field or query string item.
+
+If search engine friendly URLs are turned on the action will be determined from the last part of the script URL.
 
 =cut
 
 ###########################################################
 sub getAction{
 	my $self = shift;
-	my $request = $self->getRequest();
-	my $params = $request->getParameters();
 	my $action = "default";	
-	if(defined($params->{'action'})){
-		$action = $params->{'action'};
+	if(defined($self->getOption('sefUrls')) && $self->getOption('sefUrls')){	#do we have search engine friendly urls
+		my $sefAction = $self->_getSefAction();
+		if($sefAction){
+			$action = $sefAction;
+		}
 	}
-	$self->log("Using action: '$action'");
+	else{	#get action from query string or post string
+		my $request = $self->getRequest();
+		my $params = $request->getParameters();
+		if(defined($params->{'action'})){
+			$action = $params->{'action'};
+		}
+	}
 	return $action;	
+}
+#########################################################
+
+=pod
+
+=head2 getFullUrl()
+
+	my $url = $m->getFullUrl();
+
+Returns the full URL for the application.
+
+=cut
+
+#########################################################
+sub getFullUrl{
+	my $self = shift;
+	my $url = undef;
+	if(defined($self->getOption('sefUrls')) && $self->getOption('sefUrls')){	#do we have search engine friendly urls
+		$url = $self->getSiteUrl() . "/";
+	}
+	else{
+		$url = $self->getThisUrl();
+	}
+	return $url;
+}
+#########################################################
+
+=pod
+
+=head2 getUrlForAction($action, $queryString)
+
+	my $url = $m->getUrlForAction("someAction", "a=b&c=d");
+
+Returns the Full URL for the application with the given action and query string
+
+=cut
+
+#########################################################
+sub getUrlForAction{
+	my($self, $action, $query) = @_;
+	my $url = undef;
+	if(defined($self->getOption('sefUrls')) && $self->getOption('sefUrls')){	#do we have search engine friendly urls
+		$url = $self->getSiteUrl() . "/";
+		if($query){	#add query string
+			$url .= "?" . $query;
+		}
+	}
+	else{
+		$url = $self->getThisUrl() . "?action=" . $action;
+		if($query){	#add query string
+			$url .= "&" . $query;
+		}
+	}
+	return $url;
 }
 #########################################################
 
@@ -196,35 +269,90 @@ sub getAction{
 This methood is required for the web application to deal with the current request.
 It should be called after any setup is done.
 
+If the response object decides that the response has not been modified then this 
+method will not run any action functions. 
+
 =cut
 
 ###########################################################
 sub run{	#run the code for the given action
 	my $self = shift;
 	my $response = $self->getResponse();
-	my $action = $self->getAction();	
-	my $actions = $self->_getActions();
-	my $actionSub = $actions->{$action};
-	if($actionSub){	#got some code to execute
-		eval{
-			&$actionSub($self);
-		};
-		if($@){	#problem with sub
-			$response->setError("<pre>" . $@ . "</pre>");
+	if($response->code() != 304){	#need to do something
+		$self->log("Need to run action sub");
+		my $action = $self->getAction();	
+		if($self->getOption('debug')){
+			$self->log("Using action: '$action'");
 		}
-	}
-	else{	#no code to execute
-		$response->setError("No action sub found for: $action");
+		my $actions = $self->_getActions();
+		my $actionSub = $actions->{$action};
+		if($actionSub){	#got some code to execute
+			eval{
+				&$actionSub($self);
+			};
+			if($@){	#problem with sub
+				$response->setError("<pre>" . $@ . "</pre>");
+			}
+		}
+		else{	#no code to execute
+			$response->setError("No action sub found for: $action");
+		}
 	}
 	$response->display();	#display the output to the browser
 	return 1;
 }
+##########################################################
+
+=pod
+
+=head2 getOption("key")
+
+	my $value = $m->getOption("debug");
+
+Returns the value of the configuration option given.
+
+=cut
+
+##########################################################
+sub getOption{
+	my($self, $key) = @_;
+	my $value = undef;
+	if(defined($self->{'_options'}->{$key})){	#this config option has been set
+		$value = $self->{'_options'}->{$key};
+	}
+	return $value;
+}
+###########################################################
+sub createEtag{
+	my $self = shift;
+	my $request = $self->getRequest();
+	return $self->__getActionDigest() . "-" . $request->getDigest();
+}
 ###########################################################
 # Private methods
+#########################################################
+sub __getActionDigest{
+	my $self = shift;
+	my $sha1 = Digest::SHA1->new();
+	$sha1->add($self->getAction());
+	return $sha1->hexdigest();
+}
+###########################################################
+sub _getSefAction{
+	my $action = undef;
+	my @checkVars = ('SCRIPT_URL', 'REDIRECT_URL');	#possible places to look for actions
+	foreach my $check (@checkVars){
+		if(defined($ENV{$check}) && $ENV{$check} =~ m/\/(.+)$/){	#get the action from the last part of the url
+			$action = $1;
+			last;
+		}
+	}
+	return $action;
+}
 ###########################################################
 sub _init{	#things to do when this object is created
 	my $self = shift;
-	if(!defined($self->_getOption('checkReferer')) || $self->_getOption('checkReferer')){	#check the referer by default
+	if(!defined($self->getOption('checkReferer')) || $self->getOption('checkReferer')){	#check the referer by default
 		$self->_checkReferer();	#check this first
 	}
 	my $response = $self->getResponse();
@@ -234,12 +362,16 @@ sub _init{	#things to do when this object is created
 	if($session->read()){	#check for an existing session
 		if($session->validate()){
 			$existingSession = 1;
-			$self->log("Existing session: " . $session->getId());
+			if($self->getOption('debug')){
+				$self->log("Existing session: " . $session->getId());
+			}
 		}
 	}
 	if(!$existingSession){	#start a new session
 		if($session->create({}, $response)){
-			$self->log("Created new session: " . $session->getId());
+			if($self->getOption('debug')){
+				$self->log("Created new session: " . $session->getId());
+			}
 		}
 		else{
 			$response->setError($session->getError());	#now care about errors
@@ -266,14 +398,11 @@ sub _getActions{
 	my $self = shift;
 	return $self->{'_actions'};
 }
-##########################################################
-sub _getOption{
-	my($self, $key) = @_;
-	my $value = undef;
-	if(defined($self->{'_options'}->{$key})){	#this config option has been set
-		$value = $self->{'_options'}->{$key};
-	}
-	return $value;
+###########################################################
+sub _setOption{
+	my($self, $key, $value) = @_;
+	$self->{'_options'}->{$key} = $value;
+	return 1;
 }
 ###########################################################
 
@@ -312,6 +441,19 @@ A scalar string consisting of the request class to use. Useful if you want to ch
 requests are handled.
 
 Defaults to ref($self)::Request
+
+=head3 sefUrls
+
+A boolean value indicating if search engine friendly URLS are to be used. The following .htaccess rewrite rule should be
+used:
+
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$         /cgi-bin/app.cgi [L]
+
+=head3 debug
+
+A boolean value indicating if debug mode is enabled. This can then be used in output views or code to print extra debug.
 
 =head1 Notes
 

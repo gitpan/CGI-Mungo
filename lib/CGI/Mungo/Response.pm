@@ -21,9 +21,28 @@ use strict;
 use warnings;
 use Carp;
 #########################################################
+
+=pod
+
+=head2 new($mungo, $plugin)
+
+Constructor, a factory method that will return an instance of the requested response plugin.
+
+If the response is not modified from the client's provided Etag header an instance of <LCGI::Mungo::Response::NotModified>
+will be returned instead.
+
+=cut
+
+#########################################################
 sub new{
 	my($class, $mungo, $plugin) = @_;
 	if($plugin){
+		my $request = $mungo->getRequest();
+		my $currentEtag = $request->getHeader('If-None-Match');
+		if($currentEtag && $currentEtag eq $mungo->createEtag()){	#cached response
+			$mungo->log("Using not modified response");
+			$plugin = $class . "::NotModified";
+		}
 		eval "use $plugin;";	#should do this a better way
 		if(!$@){	#plugin loaded ok
 			my $self = $plugin->new($mungo);
@@ -41,8 +60,6 @@ sub new{
 #########################################################
 =pod
 
-=head1 Notes
-
 =head1 Author
 
 MacGyveR <dumb@cpan.org>
@@ -51,7 +68,7 @@ Development questions, bug reports, and patches are welcome to the above address
 
 =head1 Copyright
 
-Copyright (c) 2011 MacGyveR. All rights reserved.
+Copyright (c) 2013 MacGyveR. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
