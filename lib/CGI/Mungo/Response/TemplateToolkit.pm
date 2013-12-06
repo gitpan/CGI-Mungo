@@ -24,9 +24,11 @@ With this class you can specify empty Mungo actions to just display a static pag
 
 use strict;
 use warnings;
+use File::Basename;
+use File::Spec;
 use Template;
 use Carp;
-use base qw(CGI::Mungo::Response::Base CGI::Mungo::Log);
+use base qw(CGI::Mungo::Response::Base);
 our $templateLoc = "../root/templates";	#where the templates are stored
 #########################################################
 
@@ -108,17 +110,25 @@ sub display{	#this sub will display the page headers if needed
 		$output = $self->_getContent();	#get the contents of the template
 	}
 	else{	#first output so display any headers
-		if(!$self->header("Content-type")){	#set default content type
-			$self->header("Content-type" => "text/html");
-		}
-		if(!$self->header("Location")){	#if we dont have a redirect
+        if($self->header("Location")){
+          $self->code(302);
+          $self->message('Found');
+        }
+        else{ #if we dont have a redirect
+	        if(!$self->header("Content-type")){ #set default content type
+	            $self->header("Content-type" => "text/html");
+	        }
 			my $content = $self->_getContent();	#get the contents of the template
 			$self->content($content);
 		}
-		if($self->getError()){	#set the error code when needed
+		if($self->getError() && $self->code() =~ m/^[123]/){	#set the error code when needed
 			$self->code(500);
+			$self->message('Internal Server Error');
 		}
 		$output = "Status: " . $self->as_string();
+	}
+	if($self->getError()){
+		$self->log($self->getError());	#just log it so we have a record of this
 	}
 	print $output;
 	$self->_setDisplayedHeader();	#we wont display the header again
@@ -181,7 +191,7 @@ sub _getContent{
 	my $content = "";
 	my $tt = Template->new(
 		{
-			INCLUDE_PATH => $self->_getTemplateLocation(),
+			INCLUDE_PATH => $self->_getTemplatePath(),
 			ENCODING => 'utf-8'
 		}
 	);
@@ -198,9 +208,6 @@ sub _getContent{
 	if($self->getError()){	#_parseFile may have errored
 		$self->setTemplateVar('message', $self->getError());
 		$tt->process("genericerror.html", $self->_getTemplateVars(), \$content);
-		if(!$content){	#_parseFile may have errored again
-			$self->log($self->getError());	#just log it so we have a record of this
-		}
 	}
 	return $content;
 }
@@ -216,8 +223,12 @@ sub _getTemplateNameForAction{
 	return $name;
 }
 #########################################################
-sub _getTemplateLocation{
-	return $templateLoc;
+sub _getTemplatePath{
+    my $currentDir = dirname($ENV{'SCRIPT_NAME'});
+    my @dirs = File::Spec->splitdir($currentDir);
+    shift(@dirs);
+    @dirs = map("..", @dirs);
+    return File::Spec->catfile(@dirs, $templateLoc);
 }
 ##############################################################
 
