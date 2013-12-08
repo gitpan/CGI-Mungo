@@ -38,7 +38,7 @@ use base qw(CGI::Mungo::Base CGI::Mungo::Utils CGI::Mungo::Log);
 use CGI::Mungo::Response;
 use CGI::Mungo::Session;	#for session management
 use CGI::Mungo::Request;
-our $VERSION = "1.8";
+our $VERSION = "1.801";
 #########################################################
 
 =head2 new(\%options)
