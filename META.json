@@ -4,7 +4,7 @@
       "MacGyveR <dumb@cpan.org>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4007, CPAN::Meta::Converter version 2.132140",
+   "generated_by" : "Module::Build version 0.4007, CPAN::Meta::Converter version 2.132830",
    "license" : [
       "perl_5"
    ],
@@ -44,7 +44,7 @@
    "provides" : {
       "CGI::Mungo" : {
          "file" : "lib/CGI/Mungo.pm",
-         "version" : "1.801"
+         "version" : "1.9"
       },
       "CGI::Mungo::Base" : {
          "file" : "lib/CGI/Mungo/Base.pm"
@@ -83,5 +83,5 @@
          "http://dev.perl.org/licenses/"
       ]
    },
-   "version" : "1.801"
+   "version" : "1.9"
 }

@@ -176,13 +176,14 @@ sub setTemplateVar{
 #########################################################
 sub getTemplateVar{
 	my($self, $name) = @_;
-	return $self->{'_templateVars'}->{$name};
+	my $vars = $self->_getTemplateVars();
+	return $vars->{$name};
 }
 #########################################################
 # private methods
 ########################################################
 sub _getTemplateVars{
-	my($self, $name) = @_;
+	my $self = shift;
 	return $self->{'_templateVars'};
 }
 #########################################################

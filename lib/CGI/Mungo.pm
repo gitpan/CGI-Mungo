@@ -38,7 +38,7 @@ use base qw(CGI::Mungo::Base CGI::Mungo::Utils CGI::Mungo::Log);
 use CGI::Mungo::Response;
 use CGI::Mungo::Session;	#for session management
 use CGI::Mungo::Request;
-our $VERSION = "1.801";
+our $VERSION = "1.9";
 #########################################################
 
 =head2 new(\%options)
@@ -369,7 +369,7 @@ sub _checkReferer{	#simple referer check for very basic security
 	my $self = shift;
 	my $result = 0;
 	my $host = $ENV{'HTTP_HOST'};
-	if($ENV{'HTTP_REFERER'} && $ENV{'HTTP_REFERER'} =~ m/^(http|https):\/\/$host/){	#simple check here
+	if($host && $ENV{'HTTP_REFERER'} && $ENV{'HTTP_REFERER'} =~ m/^(http|https):\/\/$host/){	#simple check here
 		$result = 1;
 	}
 	else{
